@@ -22,7 +22,7 @@ const (
 
 func (a *Animal) UnmarshalJSON(b []byte) error {
 	var s string
-	if err := jsonconvention.Unmarshal(b, &s); err != nil {
+	if err := jsonconvention.Unmarshal(b, &s, nil); err != nil {
 		return err
 	}
 	switch strings.ToLower(s) {
@@ -48,13 +48,13 @@ func (a Animal) MarshalJSON() ([]byte, error) {
 		s = "zebra"
 	}
 
-	return jsonconvention.Marshal(s)
+	return jsonconvention.Marshal(s, nil)
 }
 
 func Example_customMarshalJSON() {
 	blob := `["gopher","armadillo","zebra","unknown","gopher","bee","gopher","zebra"]`
 	var zoo []Animal
-	if err := jsonconvention.Unmarshal([]byte(blob), &zoo); err != nil {
+	if err := jsonconvention.Unmarshal([]byte(blob), &zoo, nil); err != nil {
 		log.Fatal(err)
 	}
 

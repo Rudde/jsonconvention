@@ -93,7 +93,7 @@ import (
 // Instead, they are replaced by the Unicode replacement
 // character U+FFFD.
 //
-func Unmarshal(data []byte, v interface{}) error {
+func Unmarshal(data []byte, v interface{}, convention func(string) string) error {
 	// Check for well-formedness.
 	// Avoids filling out half a data structure
 	// before discovering a JSON syntax error.
@@ -104,7 +104,7 @@ func Unmarshal(data []byte, v interface{}) error {
 	}
 
 	d.init(data)
-	return d.unmarshal(v)
+	return d.unmarshal(v, convention)
 }
 
 // Unmarshaler is the interface implemented by types
@@ -167,7 +167,7 @@ func (e *InvalidUnmarshalError) Error() string {
 	return "json: Unmarshal(nil " + e.Type.String() + ")"
 }
 
-func (d *decodeState) unmarshal(v interface{}) error {
+func (d *decodeState) unmarshal(v interface{}, convention func(string) string) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return &InvalidUnmarshalError{reflect.TypeOf(v)}
@@ -177,7 +177,7 @@ func (d *decodeState) unmarshal(v interface{}) error {
 	d.scanWhile(scanSkipSpace)
 	// We decode rv not rv.Elem because the Unmarshaler interface
 	// test must be applied at the top level of the value.
-	err := d.value(rv)
+	err := d.value(rv, convention)
 	if err != nil {
 		return d.addErrorContext(err)
 	}
@@ -353,7 +353,7 @@ Switch:
 // value consumes a JSON value from d.data[d.off-1:], decoding into v, and
 // reads the following byte ahead. If v is invalid, the value is discarded.
 // The first byte of the value has been read already.
-func (d *decodeState) value(v reflect.Value) error {
+func (d *decodeState) value(v reflect.Value, convention func(string) string) error {
 	switch d.opcode {
 	default:
 		panic(phasePanicMsg)
@@ -370,7 +370,7 @@ func (d *decodeState) value(v reflect.Value) error {
 
 	case scanBeginObject:
 		if v.IsValid() {
-			if err := d.object(v); err != nil {
+			if err := d.object(v, convention); err != nil {
 				return err
 			}
 		} else {
@@ -558,12 +558,12 @@ func (d *decodeState) array(v reflect.Value) error {
 
 		if i < v.Len() {
 			// Decode into element.
-			if err := d.value(v.Index(i)); err != nil {
+			if err := d.value(v.Index(i), nil); err != nil {
 				return err
 			}
 		} else {
 			// Ran out of fixed array: skip.
-			if err := d.value(reflect.Value{}); err != nil {
+			if err := d.value(reflect.Value{}, nil); err != nil {
 				return err
 			}
 		}
@@ -603,7 +603,7 @@ var textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem(
 
 // object consumes an object from d.data[d.off-1:], decoding into v.
 // The first byte ('{') of the object has been read already.
-func (d *decodeState) object(v reflect.Value) error {
+func (d *decodeState) object(v reflect.Value, convention func(string) string) error {
 	// Check for unmarshaler.
 	u, ut, pv := indirect(v, false)
 	if u != nil {
@@ -651,7 +651,7 @@ func (d *decodeState) object(v reflect.Value) error {
 			v.Set(reflect.MakeMap(t))
 		}
 	case reflect.Struct:
-		fields = cachedTypeFields(t)
+		fields = cachedTypeFields(t, convention)
 		// ok
 	default:
 		d.saveError(&UnmarshalTypeError{Value: "object", Type: t, Offset: int64(d.off)})
@@ -771,7 +771,7 @@ func (d *decodeState) object(v reflect.Value) error {
 				d.saveError(fmt.Errorf("json: invalid use of ,string struct tag, trying to unmarshal unquoted value into %v", subv.Type()))
 			}
 		} else {
-			if err := d.value(subv); err != nil {
+			if err := d.value(subv, nil); err != nil {
 				return err
 			}
 		}

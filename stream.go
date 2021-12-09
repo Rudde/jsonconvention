@@ -46,7 +46,7 @@ func (dec *Decoder) DisallowUnknownFields() { dec.d.disallowUnknownFields = true
 //
 // See the documentation for Unmarshal for details about
 // the conversion of JSON into a Go value.
-func (dec *Decoder) Decode(v interface{}) error {
+func (dec *Decoder) Decode(v interface{}, convention func(string) string) error {
 	if dec.err != nil {
 		return dec.err
 	}
@@ -70,7 +70,7 @@ func (dec *Decoder) Decode(v interface{}) error {
 	// Don't save err from unmarshal into dec.err:
 	// the connection is still usable since we read a complete JSON
 	// object from it before the error happened.
-	err = dec.d.unmarshal(v)
+	err = dec.d.unmarshal(v, convention)
 
 	// fixup token streaming state
 	dec.tokenValueEnd()
@@ -203,7 +203,7 @@ func (enc *Encoder) Encode(v interface{}) error {
 		return enc.err
 	}
 	e := newEncodeState()
-	err := e.marshal(v, encOpts{escapeHTML: enc.escapeHTML})
+	err := e.marshal(v, nil, encOpts{escapeHTML: enc.escapeHTML})
 	if err != nil {
 		return err
 	}
@@ -438,7 +438,7 @@ func (dec *Decoder) Token() (Token, error) {
 				var x string
 				old := dec.tokenState
 				dec.tokenState = tokenTopValue
-				err := dec.Decode(&x)
+				err := dec.Decode(&x, nil)
 				dec.tokenState = old
 				if err != nil {
 					return nil, err
@@ -453,7 +453,7 @@ func (dec *Decoder) Token() (Token, error) {
 				return dec.tokenError(c)
 			}
 			var x interface{}
-			if err := dec.Decode(&x); err != nil {
+			if err := dec.Decode(&x, nil); err != nil {
 				return nil, err
 			}
 			return x, nil

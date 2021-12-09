@@ -185,7 +185,7 @@ func TestDecoder(t *testing.T) {
 		out := make([]interface{}, i)
 		dec := NewDecoder(&buf)
 		for j := range out {
-			if err := dec.Decode(&out[j]); err != nil {
+			if err := dec.Decode(&out[j], nil); err != nil {
 				t.Fatalf("decode #%d/%d: %v", j, i, err)
 			}
 		}
@@ -207,7 +207,7 @@ func TestDecoderBuffered(t *testing.T) {
 		Name string
 	}
 	d := NewDecoder(r)
-	err := d.Decode(&m)
+	err := d.Decode(&m, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,14 +245,14 @@ func TestRawMessage(t *testing.T) {
 	}
 	const raw = `["\u0056",null]`
 	const msg = `{"X":0.1,"Id":["\u0056",null],"Y":0.2}`
-	err := Unmarshal([]byte(msg), &data)
+	err := Unmarshal([]byte(msg), &data, nil)
 	if err != nil {
 		t.Fatalf("Unmarshal: %v", err)
 	}
 	if string([]byte(data.Id)) != raw {
 		t.Fatalf("Raw mismatch: have %#q want %#q", []byte(data.Id), raw)
 	}
-	b, err := Marshal(&data)
+	b, err := Marshal(&data, nil)
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
@@ -269,7 +269,7 @@ func TestNullRawMessage(t *testing.T) {
 		Y     float32
 	}
 	const msg = `{"X":0.1,"Id":null,"IdPtr":null,"Y":0.2}`
-	err := Unmarshal([]byte(msg), &data)
+	err := Unmarshal([]byte(msg), &data, nil)
 	if err != nil {
 		t.Fatalf("Unmarshal: %v", err)
 	}
@@ -279,7 +279,7 @@ func TestNullRawMessage(t *testing.T) {
 	if data.IdPtr != nil {
 		t.Fatalf("Raw pointer mismatch: have non-nil, want nil")
 	}
-	b, err := Marshal(&data)
+	b, err := Marshal(&data, nil)
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
@@ -301,7 +301,7 @@ func TestBlocking(t *testing.T) {
 
 		// If Decode reads beyond what w.Write writes above,
 		// it will block, and the test will deadlock.
-		if err := NewDecoder(r).Decode(&val); err != nil {
+		if err := NewDecoder(r).Decode(&val, nil); err != nil {
 			t.Errorf("decoding %s: %v", enc, err)
 		}
 		r.Close()
@@ -415,7 +415,7 @@ func TestDecodeInStream(t *testing.T) {
 
 			if dt, ok := etk.(decodeThis); ok {
 				etk = dt.v
-				err = dec.Decode(&tk)
+				err = dec.Decode(&tk, nil)
 			} else {
 				tk, err = dec.Token()
 			}
@@ -458,7 +458,7 @@ func TestHTTPDecoding(t *testing.T) {
 	}{}
 
 	d := NewDecoder(res.Body)
-	err = d.Decode(&foo)
+	err = d.Decode(&foo, nil)
 	if err != nil {
 		t.Fatalf("Decode: %v", err)
 	}
@@ -467,7 +467,7 @@ func TestHTTPDecoding(t *testing.T) {
 	}
 
 	// make sure we get the EOF the second time
-	err = d.Decode(&foo)
+	err = d.Decode(&foo, nil)
 	if err != io.EOF {
 		t.Errorf("err = %v; want io.EOF", err)
 	}

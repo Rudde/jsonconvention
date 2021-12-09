@@ -26,7 +26,7 @@ func ExampleMarshal() {
 		Name:   "Reds",
 		Colors: []string{"Crimson", "Red", "Ruby", "Maroon"},
 	}
-	b, err := jsonconvention.Marshal(group)
+	b, err := jsonconvention.Marshal(group, nil)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -45,7 +45,7 @@ func ExampleUnmarshal() {
 		Order string
 	}
 	var animals []Animal
-	err := jsonconvention.Unmarshal(jsonBlob, &animals)
+	err := jsonconvention.Unmarshal(jsonBlob, &animals, nil)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -69,7 +69,7 @@ func ExampleDecoder() {
 	dec := jsonconvention.NewDecoder(strings.NewReader(jsonStream))
 	for {
 		var m Message
-		if err := dec.Decode(&m); err == io.EOF {
+		if err := dec.Decode(&m, nil); err == io.EOF {
 			break
 		} else if err != nil {
 			log.Fatal(err)
@@ -148,7 +148,7 @@ func ExampleDecoder_Decode_stream() {
 	for dec.More() {
 		var m Message
 		// decode an array value (Message)
-		err := dec.Decode(&m)
+		err := dec.Decode(&m, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -195,7 +195,7 @@ func ExampleRawMessage_unmarshal() {
 	{"Space": "RGB",   "Point": {"R": 98, "G": 218, "B": 255}}
 ]`)
 	var colors []Color
-	err := jsonconvention.Unmarshal(j, &colors)
+	err := jsonconvention.Unmarshal(j, &colors, nil)
 	if err != nil {
 		log.Fatalln("error:", err)
 	}
@@ -208,7 +208,7 @@ func ExampleRawMessage_unmarshal() {
 		case "YCbCr":
 			dst = new(YCbCr)
 		}
-		err := jsonconvention.Unmarshal(c.Point, dst)
+		err := jsonconvention.Unmarshal(c.Point, dst, nil)
 		if err != nil {
 			log.Fatalln("error:", err)
 		}
@@ -253,7 +253,7 @@ func ExampleIndent() {
 		{"Sheep Creek", 51},
 	}
 
-	b, err := jsonconvention.Marshal(roads)
+	b, err := jsonconvention.Marshal(roads, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -48,7 +48,7 @@ func (s Size) MarshalText() ([]byte, error) {
 func Example_textMarshalJSON() {
 	blob := `["small","regular","large","unrecognized","small","normal","small","large"]`
 	var inventory []Size
-	if err := jsonconvention.Unmarshal([]byte(blob), &inventory); err != nil {
+	if err := jsonconvention.Unmarshal([]byte(blob), &inventory, nil); err != nil {
 		log.Fatal(err)
 	}
 

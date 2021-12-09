@@ -54,11 +54,11 @@ func codeInit() {
 
 	codeJSON = data
 
-	if err := Unmarshal(codeJSON, &codeStruct); err != nil {
+	if err := Unmarshal(codeJSON, &codeStruct, nil); err != nil {
 		panic("unmarshal code.json: " + err.Error())
 	}
 
-	if data, err = Marshal(&codeStruct); err != nil {
+	if data, err = Marshal(&codeStruct, nil); err != nil {
 		panic("marshal code.json: " + err.Error())
 	}
 
@@ -103,7 +103,7 @@ func BenchmarkCodeMarshal(b *testing.B) {
 	}
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if _, err := Marshal(&codeStruct); err != nil {
+			if _, err := Marshal(&codeStruct, nil); err != nil {
 				b.Fatal("Marshal:", err)
 			}
 		}
@@ -122,7 +122,7 @@ func benchMarshalBytes(n int) func(*testing.B) {
 	}
 	return func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			if _, err := Marshal(v); err != nil {
+			if _, err := Marshal(v, nil); err != nil {
 				b.Fatal("Marshal:", err)
 			}
 		}
@@ -157,7 +157,7 @@ func BenchmarkCodeDecoder(b *testing.B) {
 			buf.WriteByte('\n')
 			buf.WriteByte('\n')
 			buf.WriteByte('\n')
-			if err := dec.Decode(&r); err != nil {
+			if err := dec.Decode(&r, nil); err != nil {
 				b.Fatal("Decode:", err)
 			}
 		}
@@ -174,7 +174,7 @@ func BenchmarkUnicodeDecoder(b *testing.B) {
 	var out string
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := dec.Decode(&out); err != nil {
+		if err := dec.Decode(&out, nil); err != nil {
 			b.Fatal("Decode:", err)
 		}
 		r.Seek(0, 0)
@@ -188,7 +188,7 @@ func BenchmarkDecoderStream(b *testing.B) {
 	dec := NewDecoder(&buf)
 	buf.WriteString(`"` + strings.Repeat("x", 1000000) + `"` + "\n\n\n")
 	var x interface{}
-	if err := dec.Decode(&x); err != nil {
+	if err := dec.Decode(&x, nil); err != nil {
 		b.Fatal("Decode:", err)
 	}
 	ones := strings.Repeat(" 1\n", 300000) + "\n\n\n"
@@ -198,7 +198,7 @@ func BenchmarkDecoderStream(b *testing.B) {
 			buf.WriteString(ones)
 		}
 		x = nil
-		if err := dec.Decode(&x); err != nil || x != 1.0 {
+		if err := dec.Decode(&x, nil); err != nil || x != 1.0 {
 			b.Fatalf("Decode: %v after %d", err, i)
 		}
 	}
@@ -214,7 +214,7 @@ func BenchmarkCodeUnmarshal(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			var r codeResponse
-			if err := Unmarshal(codeJSON, &r); err != nil {
+			if err := Unmarshal(codeJSON, &r, nil); err != nil {
 				b.Fatal("Unmarshal:", err)
 			}
 		}
@@ -232,7 +232,7 @@ func BenchmarkCodeUnmarshalReuse(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var r codeResponse
 		for pb.Next() {
-			if err := Unmarshal(codeJSON, &r); err != nil {
+			if err := Unmarshal(codeJSON, &r, nil); err != nil {
 				b.Fatal("Unmarshal:", err)
 			}
 		}
@@ -246,7 +246,7 @@ func BenchmarkUnmarshalString(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var s string
 		for pb.Next() {
-			if err := Unmarshal(data, &s); err != nil {
+			if err := Unmarshal(data, &s, nil); err != nil {
 				b.Fatal("Unmarshal:", err)
 			}
 		}
@@ -259,7 +259,7 @@ func BenchmarkUnmarshalFloat64(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var f float64
 		for pb.Next() {
-			if err := Unmarshal(data, &f); err != nil {
+			if err := Unmarshal(data, &f, nil); err != nil {
 				b.Fatal("Unmarshal:", err)
 			}
 		}
@@ -272,7 +272,7 @@ func BenchmarkUnmarshalInt64(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var x int64
 		for pb.Next() {
-			if err := Unmarshal(data, &x); err != nil {
+			if err := Unmarshal(data, &x, nil); err != nil {
 				b.Fatal("Unmarshal:", err)
 			}
 		}
@@ -285,7 +285,7 @@ func BenchmarkIssue10335(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var s struct{}
 		for pb.Next() {
-			if err := Unmarshal(j, &s); err != nil {
+			if err := Unmarshal(j, &s, nil); err != nil {
 				b.Fatal(err)
 			}
 		}
@@ -301,7 +301,7 @@ func BenchmarkIssue34127(b *testing.B) {
 	}
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if _, err := Marshal(&j); err != nil {
+			if _, err := Marshal(&j, nil); err != nil {
 				b.Fatal(err)
 			}
 		}
@@ -314,7 +314,7 @@ func BenchmarkUnmapped(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var s struct{}
 		for pb.Next() {
-			if err := Unmarshal(j, &s); err != nil {
+			if err := Unmarshal(j, &s, nil); err != nil {
 				b.Fatal(err)
 			}
 		}

@@ -2,13 +2,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package json_test
+package jsonconvention_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/rudde/jsonconvention"
 )
 
 type Size int
@@ -47,7 +48,7 @@ func (s Size) MarshalText() ([]byte, error) {
 func Example_textMarshalJSON() {
 	blob := `["small","regular","large","unrecognized","small","normal","small","large"]`
 	var inventory []Size
-	if err := json.Unmarshal([]byte(blob), &inventory); err != nil {
+	if err := jsonconvention.Unmarshal([]byte(blob), &inventory); err != nil {
 		log.Fatal(err)
 	}
 

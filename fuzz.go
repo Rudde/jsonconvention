@@ -5,7 +5,7 @@
 //go:build gofuzz
 // +build gofuzz
 
-package json
+package jsonconvention
 
 import (
 	"fmt"

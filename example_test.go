@@ -2,16 +2,17 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package json_test
+package jsonconvention_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/rudde/jsonconvention"
 )
 
 func ExampleMarshal() {
@@ -25,7 +26,7 @@ func ExampleMarshal() {
 		Name:   "Reds",
 		Colors: []string{"Crimson", "Red", "Ruby", "Maroon"},
 	}
-	b, err := json.Marshal(group)
+	b, err := jsonconvention.Marshal(group)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -44,7 +45,7 @@ func ExampleUnmarshal() {
 		Order string
 	}
 	var animals []Animal
-	err := json.Unmarshal(jsonBlob, &animals)
+	err := jsonconvention.Unmarshal(jsonBlob, &animals)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -65,7 +66,7 @@ func ExampleDecoder() {
 	type Message struct {
 		Name, Text string
 	}
-	dec := json.NewDecoder(strings.NewReader(jsonStream))
+	dec := jsonconvention.NewDecoder(strings.NewReader(jsonStream))
 	for {
 		var m Message
 		if err := dec.Decode(&m); err == io.EOF {
@@ -88,7 +89,7 @@ func ExampleDecoder_Token() {
 	const jsonStream = `
 	{"Message": "Hello", "Array": [1, 2, 3], "Null": null, "Number": 1.234}
 `
-	dec := json.NewDecoder(strings.NewReader(jsonStream))
+	dec := jsonconvention.NewDecoder(strings.NewReader(jsonStream))
 	for {
 		t, err := dec.Token()
 		if err == io.EOF {
@@ -104,20 +105,20 @@ func ExampleDecoder_Token() {
 		fmt.Printf("\n")
 	}
 	// Output:
-	// json.Delim: { (more)
+	// jsonconvention.Delim: { (more)
 	// string: Message (more)
 	// string: Hello (more)
 	// string: Array (more)
-	// json.Delim: [ (more)
+	// jsonconvention.Delim: [ (more)
 	// float64: 1 (more)
 	// float64: 2 (more)
 	// float64: 3
-	// json.Delim: ] (more)
+	// jsonconvention.Delim: ] (more)
 	// string: Null (more)
 	// <nil>: <nil> (more)
 	// string: Number (more)
 	// float64: 1.234
-	// json.Delim: }
+	// jsonconvention.Delim: }
 }
 
 // This example uses a Decoder to decode a streaming array of JSON objects.
@@ -134,7 +135,7 @@ func ExampleDecoder_Decode_stream() {
 	type Message struct {
 		Name, Text string
 	}
-	dec := json.NewDecoder(strings.NewReader(jsonStream))
+	dec := jsonconvention.NewDecoder(strings.NewReader(jsonStream))
 
 	// read open bracket
 	t, err := dec.Token()
@@ -163,20 +164,20 @@ func ExampleDecoder_Decode_stream() {
 	fmt.Printf("%T: %v\n", t, t)
 
 	// Output:
-	// json.Delim: [
+	// jsonconvention.Delim: [
 	// Ed: Knock knock.
 	// Sam: Who's there?
 	// Ed: Go fmt.
 	// Sam: Go fmt who?
 	// Ed: Go fmt yourself!
-	// json.Delim: ]
+	// jsonconvention.Delim: ]
 }
 
 // This example uses RawMessage to delay parsing part of a JSON message.
 func ExampleRawMessage_unmarshal() {
 	type Color struct {
 		Space string
-		Point json.RawMessage // delay parsing until we know the color space
+		Point jsonconvention.RawMessage // delay parsing until we know the color space
 	}
 	type RGB struct {
 		R uint8
@@ -194,7 +195,7 @@ func ExampleRawMessage_unmarshal() {
 	{"Space": "RGB",   "Point": {"R": 98, "G": 218, "B": 255}}
 ]`)
 	var colors []Color
-	err := json.Unmarshal(j, &colors)
+	err := jsonconvention.Unmarshal(j, &colors)
 	if err != nil {
 		log.Fatalln("error:", err)
 	}
@@ -207,7 +208,7 @@ func ExampleRawMessage_unmarshal() {
 		case "YCbCr":
 			dst = new(YCbCr)
 		}
-		err := json.Unmarshal(c.Point, dst)
+		err := jsonconvention.Unmarshal(c.Point, dst)
 		if err != nil {
 			log.Fatalln("error:", err)
 		}
@@ -220,14 +221,14 @@ func ExampleRawMessage_unmarshal() {
 
 // This example uses RawMessage to use a precomputed JSON during marshal.
 func ExampleRawMessage_marshal() {
-	h := json.RawMessage(`{"precomputed": true}`)
+	h := jsonconvention.RawMessage(`{"precomputed": true}`)
 
 	c := struct {
-		Header *json.RawMessage `json:"header"`
-		Body   string           `json:"body"`
+		Header *jsonconvention.RawMessage `json:"header"`
+		Body   string                     `json:"body"`
 	}{Header: &h, Body: "Hello Gophers!"}
 
-	b, err := json.MarshalIndent(&c, "", "\t")
+	b, err := jsonconvention.MarshalIndent(&c, "", "\t")
 	if err != nil {
 		fmt.Println("error:", err)
 	}
@@ -252,13 +253,13 @@ func ExampleIndent() {
 		{"Sheep Creek", 51},
 	}
 
-	b, err := json.Marshal(roads)
+	b, err := jsonconvention.Marshal(roads)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var out bytes.Buffer
-	json.Indent(&out, b, "=", "\t")
+	jsonconvention.Indent(&out, b, "=", "\t")
 	out.WriteTo(os.Stdout)
 	// Output:
 	// [
@@ -279,7 +280,7 @@ func ExampleMarshalIndent() {
 		"b": 2,
 	}
 
-	b, err := json.MarshalIndent(data, "<prefix>", "<indent>")
+	b, err := jsonconvention.MarshalIndent(data, "<prefix>", "<indent>")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -296,14 +297,14 @@ func ExampleValid() {
 	goodJSON := `{"example": 1}`
 	badJSON := `{"example":2:]}}`
 
-	fmt.Println(json.Valid([]byte(goodJSON)), json.Valid([]byte(badJSON)))
+	fmt.Println(jsonconvention.Valid([]byte(goodJSON)), jsonconvention.Valid([]byte(badJSON)))
 	// Output:
 	// true false
 }
 
 func ExampleHTMLEscape() {
 	var out bytes.Buffer
-	json.HTMLEscape(&out, []byte(`{"Name":"<b>HTML content</b>"}`))
+	jsonconvention.HTMLEscape(&out, []byte(`{"Name":"<b>HTML content</b>"}`))
 	out.WriteTo(os.Stdout)
 	// Output:
 	//{"Name":"\u003cb\u003eHTML content\u003c/b\u003e"}
